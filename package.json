@@ -9,7 +9,7 @@
     "restart": "pm2 restart SESSIONSCANNERt"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "npm:baileys@6.7.20",
+    "@whiskeysockets/baileys": "^6.7.21",
     "@adiwajshing/keyed-db": "^0.2.4",
     "qrcode": "^1.5.3",
     "awesome-phonenumber": "^2.64.0",
@@ -17,7 +17,6 @@
     "phone": "3.1.30",
     "body-parser": "^1.20.1",
     "express": "^4.18.1",
-    "path": "^0.12.7",
     "megajs": "1.1.7",
     "pm2": "^5.4.0",
     "async-mutex": "0.4.1",
