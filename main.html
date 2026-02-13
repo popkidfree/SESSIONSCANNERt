@@ -1,182 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>POPKID-XTR</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <style>
-    :root {
-      --accent: #00f7ff;
-      --accent2: #ff00e6;
-      --bg-dark: rgba(8, 8, 14, 0.75);
-      --glass-border: rgba(0, 247, 255, 0.35);
-      --text-light: #fdfdfd;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>POPKID-XTR</title>
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
-    body {
-      height: 100vh;
-      font-family: 'Inter', sans-serif;
-      background: radial-gradient(circle at 20% 20%, #00111a, #000 90%);
-      color: var(--text-light);
-      overflow: hidden;
-      perspective: 1000px;
-    }
+<style>
+:root{
+  --accent:#00f7ff;
+  --accent2:#ff00e6;
+  --accent3:#00ff99;
+  --glass:rgba(10,15,25,0.72);
+  --border:rgba(0,247,255,0.35);
+  --text:#fdfdfd;
+}
 
-    /* Background Canvases */
-    #particles-canvas,
-    #matrixCanvas {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      pointer-events: none;
-    }
-    #particles-canvas { z-index: 0; }
-    #matrixCanvas { z-index: 1; mix-blend-mode: screen; }
+*{margin:0;padding:0;box-sizing:border-box}
 
-    /* Neon Container */
-    .container {
-      position: relative;
-      z-index: 5;
-      max-width: 450px;
-      margin: 5% auto;
-      padding: 35px 30px;
-      border-radius: 22px;
-      background: var(--bg-dark);
-      border: 1px solid var(--glass-border);
-      backdrop-filter: blur(14px) saturate(160%);
-      box-shadow: 0 0 25px rgba(0, 247, 255, 0.35), 0 0 40px rgba(255, 0, 200, 0.25);
-      text-align: center;
-      animation: fadeIn 1.5s ease, floatCard 6s ease-in-out infinite;
-      transform-style: preserve-3d;
-    }
+body{
+  height:100vh;
+  font-family:'Inter',sans-serif;
+  color:var(--text);
+  background:radial-gradient(circle at 20% 20%, #00111a, #000 90%);
+  overflow:hidden;
+}
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(40px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    @keyframes floatCard {
-      0%, 100% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
-      50% { transform: translateY(-12px) rotateX(3deg) rotateY(-3deg); }
-    }
+/* background canvases */
+#particles-canvas,
+#matrixCanvas{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+}
+#particles-canvas{z-index:0}
+#matrixCanvas{z-index:1; mix-blend-mode:screen}
 
-    /* Logo */
-    .logo {
-      width: 100px;
-      height: 100px;
-      margin: 0 auto 20px;
-      border-radius: 50%;
-      background: url('https://i.ibb.co/6cBHT8tC/popkid.jpg') center/cover no-repeat;
-      border: 3px solid var(--accent);
-      box-shadow: 0 0 25px var(--accent), 0 0 50px var(--accent2);
-      animation: floatLogo 4s ease-in-out infinite, spinGlow 8s linear infinite;
-    }
+/* container */
+.container{
+  position:relative;
+  z-index:5;
+  max-width:460px;
+  margin:5% auto;
+  padding:38px 32px;
+  border-radius:22px;
+  background:var(--glass);
+  backdrop-filter:blur(18px) saturate(160%);
+  text-align:center;
+  animation:fadeIn 1.2s ease;
+}
 
-    @keyframes floatLogo {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-12px); }
-    }
-    @keyframes spinGlow {
-      from { filter: hue-rotate(0deg); }
-      to { filter: hue-rotate(360deg); }
-    }
+/* animated neon border */
+.container::before{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  border-radius:22px;
+  background:linear-gradient(45deg,var(--accent),var(--accent2),var(--accent3),var(--accent));
+  background-size:300% 300%;
+  animation:borderMove 7s linear infinite;
+  filter:blur(10px);
+  opacity:.7;
+  z-index:-1;
+}
 
-    /* Title */
-    .title {
-      font-size: 28px;
-      font-weight: 900;
-      margin-bottom: 28px;
-      background: linear-gradient(90deg, #fff, var(--accent), var(--accent2));
-      background-size: 300% auto;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: shimmer 6s linear infinite;
-      text-shadow: 0 0 10px rgba(0, 247, 255, 0.8);
-    }
+@keyframes borderMove{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
 
-    @keyframes shimmer {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 200% 50%; }
-    }
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(40px) scale(.95)}
+  to{opacity:1; transform:translateY(0) scale(1)}
+}
 
-    /* Buttons */
-    .button-container {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
+/* logo */
+.logo{
+  width:105px;
+  height:105px;
+  margin:0 auto 20px;
+  border-radius:50%;
+  background:url('https://i.ibb.co/6cBHT8tC/popkid.jpg') center/cover no-repeat;
+  border:3px solid var(--accent);
+  box-shadow:0 0 25px var(--accent),0 0 50px var(--accent2);
+  animation:floatLogo 4s ease-in-out infinite, spinGlow 8s linear infinite;
+}
 
-    .button {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      padding: 14px;
-      border-radius: 16px;
-      font-weight: 600;
-      font-size: 15px;
-      text-decoration: none;
-      color: var(--text-light);
-      border: 1px solid var(--glass-border);
-      background: rgba(0, 247, 255, 0.08);
-      backdrop-filter: blur(8px);
-      transition: all 0.35s ease;
-      position: relative;
-      overflow: hidden;
-    }
+@keyframes floatLogo{
+  50%{transform:translateY(-10px)}
+}
+@keyframes spinGlow{
+  to{filter:hue-rotate(360deg)}
+}
 
-    .button i { color: var(--accent); font-size: 17px; }
+/* title */
+.title{
+  font-size:30px;
+  font-weight:900;
+  margin-bottom:26px;
+  background:linear-gradient(90deg,#fff,var(--accent),var(--accent2));
+  background-size:300% auto;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:shimmer 6s linear infinite;
+  text-shadow:0 0 12px rgba(0,247,255,.7);
+}
 
-    .button::before {
-      content: "";
-      position: absolute;
-      top: 0; left: -100%;
-      width: 200%; height: 100%;
-      background: linear-gradient(120deg, transparent, rgba(0,247,255,0.25), transparent);
-      transition: 0.6s;
-    }
+@keyframes shimmer{
+  to{background-position:200% center}
+}
 
-    .button:hover::before { left: 100%; }
-    .button:hover {
-      transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 0 25px rgba(0, 247, 255, 0.7), 0 0 40px rgba(255, 0, 200, 0.4);
-      border-color: var(--accent);
-    }
+/* button grid */
+.button-container{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
 
-    /* Footer */
-    .footer {
-      margin-top: 30px;
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.55);
-      letter-spacing: 1px;
-    }
-  </style>
+/* base button */
+.button{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:14px;
+  border-radius:16px;
+  font-weight:600;
+  text-decoration:none;
+  color:var(--text);
+  border:1px solid var(--border);
+  background:rgba(0,247,255,0.07);
+  backdrop-filter:blur(10px);
+  transition:.35s;
+  position:relative;
+  overflow:hidden;
+}
+
+.button i{color:var(--accent)}
+
+.button::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg, transparent, rgba(0,247,255,.25), transparent);
+  opacity:0;
+  transition:.4s;
+}
+
+.button:hover::before{opacity:1}
+.button:hover{
+  transform:translateY(-4px) scale(1.04);
+  box-shadow:0 0 25px rgba(0,247,255,.7),0 0 40px rgba(255,0,200,.4);
+  border-color:var(--accent);
+}
+
+/* highlight main actions */
+.primary{
+  grid-column:span 2;
+  background:linear-gradient(135deg, rgba(0,247,255,.25), rgba(255,0,200,.2));
+  border-color:var(--accent);
+  font-size:16px;
+}
+
+/* footer */
+.footer{
+  margin-top:28px;
+  font-size:13px;
+  opacity:.6;
+  letter-spacing:1px;
+}
+</style>
 </head>
-<body>
-  <canvas id="particles-canvas"></canvas>
-  <canvas id="matrixCanvas"></canvas>
 
-  <div class="container">
-    <div class="logo"></div>
-    <h1 class="title">POPKID XTR SESSION_ID</h1>
-    <div class="button-container">
-      <a href="/qr" class="button" target="_blank"><i class="fas fa-qrcode"></i> QR CODE</a>
-      <a href="/pair" class="button" target="_blank"><i class="fas fa-link"></i> PAIRING CODE</a>
-      <a href="https://github.com/kenyanpopkid/POPKID-XTR/fork" class="button" target="_blank"><i class="fas fa-code-branch"></i> FORK BOT</a>
-      <a href="https://github.com/kenyanpopkid" class="button" target="_blank"><i class="fas fa-user-plus"></i> FOLLOW DEV</a>
-      <a href="https://whatsapp.com/channel/0029VbB6d0KKAwEdvcgqrH26" class="button" target="_blank"><i class="fab fa-whatsapp"></i> WHATSAPP</a>
-      <a href="https://github.com/kenyanpopkid/POPKID-XTR" class="button" target="_blank"><i class="fas fa-bug"></i> REPORT ERROR</a>
-    </div>
-    <div class="footer">
-      POOKID-XTR &copy; <span id="currentYear"></span>
-    </div>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+<canvas id="matrixCanvas"></canvas>
+
+<div class="container">
+  <div class="logo"></div>
+  <h1 class="title">POPKID XTR SESSION_ID</h1>
+
+  <div class="button-container">
+    <a href="/qr" class="button primary" target="_blank"><i class="fas fa-qrcode"></i> QR CODE</a>
+    <a href="/pair" class="button primary" target="_blank"><i class="fas fa-link"></i> PAIRING CODE</a>
+
+    <a href="https://github.com/kenyanpopkid/POPKID-XTR/fork" class="button" target="_blank"><i class="fas fa-code-branch"></i> FORK BOT</a>
+    <a href="https://github.com/kenyanpopkid" class="button" target="_blank"><i class="fas fa-user-plus"></i> FOLLOW DEV</a>
+
+    <a href="https://whatsapp.com/channel/0029VbB6d0KKAwEdvcgqrH26" class="button" target="_blank"><i class="fab fa-whatsapp"></i> WHATSAPP</a>
+    <a href="https://github.com/kenyanpopkid/POPKID-XTR" class="button" target="_blank"><i class="fas fa-bug"></i> REPORT ERROR</a>
   </div>
 
-  <script>
-    document.getElementById("currentYear").textContent = new Date().getFullYear();
-    // ✅ Keep your particle + matrix script unchanged here
-  </script>
+  <div class="footer">
+    POPKID-XTR &copy; <span id="currentYear"></span>
+  </div>
+</div>
+
+<script>
+document.getElementById("currentYear").textContent = new Date().getFullYear();
+// keep your particle + matrix scripts unchanged
+</script>
+
 </body>
 </html>
