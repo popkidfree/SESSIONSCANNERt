@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 let router = express.Router();
 const pino = require("pino");
-const { sendButtons } = require('gifted-btns'); // Ensure you run: npm install gifted-btns
+const { sendButtons } = require('gifted-btns'); 
 const { 
     default: makeWASocket, 
     useMultiFileAuthState, 
@@ -60,52 +60,45 @@ router.get('/', async (req, res) => {
                 const { connection, lastDisconnect } = s;
 
                 if (connection === "open") {
-                    // Wait to ensure creds.json is fully written
-                    await delay(10000);
+                    await delay(10000); // Wait for creds to save
                     
                     try {
                         let rf = path.join(__dirname, 'temp', id, 'creds.json');
                         
-                        // 1. Maintain Mega Upload Logic
+                        // 1. Upload to Mega
                         const mega_url = await upload(fs.createReadStream(rf), `${sock.user.id}.json`);
                         const string_session = mega_url.replace('https://mega.nz/file/', '');
                         let fullSession = "POPKID;;;" + string_session;
 
-                        // 2. Send the Button Message (Gifted Style)
+                        // 2. The Main Message Body
+                        let desc = `🚀 *POPKID XTR USER CONNECTED* 🚀\n\n` +
+                                   `👋 Hello there, User!\n\n` +
+                                   `> ⚠️ *Do not share your session ID with anyone!* 🤖\n\n` +
+                                   `✅ **Thanks for using POPKID-XTR**\n\n` +
+                                   `© POPKID DEVS 🔰`;
+
+                        // 3. Send via sendButtons (This delivers the copyable code)
                         await sendButtons(sock, sock.user.id, {
-                            title: '🚀 POPKID-XTR CONNECTED',
-                            text: fullSession,
-                            footer: `> *ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴘᴏᴘᴋɪᴅ ᴅᴇᴠꜱ*`,
+                            title: 'POPKID-XTR',
+                            text: desc,
+                            footer: `Session ID: ${fullSession}`,
                             buttons: [
                                 { 
                                     name: 'cta_copy', 
                                     buttonParamsJson: JSON.stringify({ 
-                                        display_text: 'Copy Session ID', 
+                                        display_text: '📋 Copy Session ID', 
                                         copy_code: fullSession 
                                     }) 
                                 },
                                 {
                                     name: 'cta_url',
                                     buttonParamsJson: JSON.stringify({
-                                        display_text: 'Join WaChannel',
+                                        display_text: '📢 Join Channel',
                                         url: 'https://whatsapp.com/channel/0029VbB6d0KKAwEdvcgqrH26'
                                     })
-                                },
-                                {
-                                    name: 'cta_url',
-                                    buttonParamsJson: JSON.stringify({
-                                        display_text: 'Visit Repo',
-                                        url: 'https://github.com/kenyanpopkid/POPKID-XTR'
-                                    })
                                 }
-                            ]
-                        });
-
-                        // 3. Optional: Send the descriptive message with External Ad Reply
-                        let desc = `╭━━━━━━━━━━━━━━━━━━━━━╮\n┃  🚀 POPKID XTR USER ✅  ┃\n╰━━━━━━━━━━━━━━━━━━━━━╯\n\n👋🏻 Hello there, User!\n\n> ⚠️ *Do not share your session ID!* 🤖\n\n✅ **Thanks for using POPKID-XTR**\n\n© POPKID DEVS 🔰`;
-                        
-                        await sock.sendMessage(sock.user.id, {
-                            text: desc,
+                            ],
+                            // This part handles the image you saw in your screenshot
                             contextInfo: {
                                 externalAdReply: {
                                     title: "POPKID-XTR",
@@ -114,18 +107,18 @@ router.get('/', async (req, res) => {
                                     sourceUrl: "https://whatsapp.com/channel/0029VbB6d0KKAwEdvcgqrH26",
                                     mediaType: 1,
                                     renderLargerThumbnail: true
-                                }  
+                                }
                             }
                         });
 
                     } catch (err) {
-                        console.error("Error during session processing:", err);
+                        console.error("Processing Error:", err);
+                        // Fallback message if buttons fail
+                        await sock.sendMessage(sock.user.id, { text: "POPKID;;;" + string_session });
                     } finally {
-                        // Cleanup
                         await delay(5000);
                         await sock.ws.close();
                         removeFile(path.join(__dirname, 'temp', id));
-                        console.log(`👤 ${sock.user.id} Connected ✅`);
                     }
                     
                 } else if (connection === "close" && lastDisconnect?.error?.output?.statusCode !== 401) {
@@ -135,11 +128,8 @@ router.get('/', async (req, res) => {
             });
 
         } catch (err) {
-            console.error("Main Error:", err);
             removeFile(path.join(__dirname, 'temp', id));
-            if (!res.headersSent) {
-                res.status(500).json({ code: "Service Unavailable" });
-            }
+            if (!res.headersSent) res.status(500).json({ code: "Service Error" });
         }
     }
 
