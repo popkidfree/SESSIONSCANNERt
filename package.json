@@ -15,6 +15,7 @@
     "awesome-phonenumber": "^2.64.0",
     "pino": "^8.1.0",
     "phone": "3.1.30",
+    "gifted-btns": "*",
     "body-parser": "^1.20.1",
     "express": "^4.18.1",
     "megajs": "1.1.7",
