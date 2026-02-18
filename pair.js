@@ -1,12 +1,21 @@
 const { makeid } = require('./gen-id');
 const express = require('express');
 const fs = require('fs');
+const path = require('path');
 let router = express.Router();
 const pino = require("pino");
-const { sendButtons } = require('gifted-btns'); // Import as in play.js
-const { default: makeWASocket, useMultiFileAuthState, delay, Browsers, makeCacheableSignalKeyStore, getAggregateVotesInPollMessage, DisconnectReason, WA_DEFAULT_EPHEMERAL, jidNormalizedUser, proto, getDevice, generateWAMessageFromContent, fetchLatestBaileysVersion, makeInMemoryStore, getContentType, generateForwardMessageContent, downloadContentFromMessage, jidDecode } = require('@whiskeysockets/baileys')
+const { sendButtons } = require('gifted-btns'); // Ensure you run: npm install gifted-btns
+const { 
+    default: makeWASocket, 
+    useMultiFileAuthState, 
+    delay, 
+    Browsers, 
+    makeCacheableSignalKeyStore, 
+    fetchLatestBaileysVersion 
+} = require('@whiskeysockets/baileys');
 
 const { upload } = require('./mega');
+
 function removeFile(FilePath) {
     if (!fs.existsSync(FilePath)) return false;
     fs.rmSync(FilePath, { recursive: true, force: true });
@@ -15,102 +24,126 @@ function removeFile(FilePath) {
 router.get('/', async (req, res) => {
     const id = makeid();
     let num = req.query.number;
+    let responseSent = false;
+
     async function GIFTED_MD_PAIR_CODE() {
-        const {
-            state,
-            saveCreds
-        } = await useMultiFileAuthState('./temp/' + id);
+        const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, 'temp', id));
+        
         try {
-            var items = ["Safari"];
-            function selectRandomItem(array) {
-                var randomIndex = Math.floor(Math.random() * array.length);
-                return array[randomIndex];
-            }
-            var randomItem = selectRandomItem(items);
+            const { version } = await fetchLatestBaileysVersion();
             
             let sock = makeWASocket({
+                version,
                 auth: {
                     creds: state.creds,
                     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
                 },
                 printQRInTerminal: false,
-                generateHighQualityLinkPreview: true,
                 logger: pino({ level: "fatal" }).child({ level: "fatal" }),
-                syncFullHistory: false,
-                browser: Browsers.macOS(randomItem)
+                browser: Browsers.macOS("Safari"),
+                syncFullHistory: false
             });
 
             if (!sock.authState.creds.registered) {
                 await delay(1500);
                 num = num.replace(/[^0-9]/g, '');
                 const code = await sock.requestPairingCode(num);
-                if (!res.headersSent) {
-                    await res.send({ code });
+                
+                if (!responseSent && !res.headersSent) {
+                    res.send({ code });
+                    responseSent = true;
                 }
             }
+
             sock.ev.on('creds.update', saveCreds);
             sock.ev.on("connection.update", async (s) => {
                 const { connection, lastDisconnect } = s;
-                
-                if (connection == "open") {
-                    await delay(5000);
-                    let rf = __dirname + `/temp/${id}/creds.json`;
 
+                if (connection === "open") {
+                    // Wait to ensure creds.json is fully written
+                    await delay(10000);
+                    
                     try {
-                        const { upload } = require('./mega');
+                        let rf = path.join(__dirname, 'temp', id, 'creds.json');
+                        
+                        // 1. Maintain Mega Upload Logic
                         const mega_url = await upload(fs.createReadStream(rf), `${sock.user.id}.json`);
                         const string_session = mega_url.replace('https://mega.nz/file/', '');
-                        let md = "POPKID;;;" + string_session;
+                        let fullSession = "POPKID;;;" + string_session;
 
-                        // Descriptive Caption
-                        const fancyCaption = `╭━━━━━━━━━━━━━━━━━━━━━╮
-┃  🚀 POPKID XTR USER ✅  ┃
-╰━━━━━━━━━━━━━━━━━━━━━╯
-
-👋🏻 Hello there, POPKID-XTR User!
-
-🚀 *𝐒𝐞𝐬𝐬𝐢𝐨𝐧 𝐈𝐃:*
-\`\`\`${md}\`\`\`
-
-> ⚠️ *Do not share your session ID with anyone!* 🤖
-
-✅ **Thanks for using POPKID-XTR** 🚀
-`.trim();
-
-                        // Installing Buttons for copying the ID
+                        // 2. Send the Button Message (Gifted Style)
                         await sendButtons(sock, sock.user.id, {
-                            title: `ᴘᴏᴘᴋɪᴅ xᴛʀ sᴇssɪᴏɴ`,
-                            text: fancyCaption,
-                            footer: 'ᴘᴏᴘᴋɪᴅ ᴀɪ ᴋᴇɴʏᴀ 🇰🇪',
-                            image: "https://files.catbox.moe/aapw1p.png",
+                            title: '🚀 POPKID-XTR CONNECTED',
+                            text: fullSession,
+                            footer: `> *ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴘᴏᴘᴋɪᴅ ᴅᴇᴠꜱ*`,
                             buttons: [
-                                { id: md, text: "📋 𝐂𝐨𝐩𝐲 𝐒𝐞𝐬𝐬𝐢𝐨𝐧 𝐈𝐃" }
-                            ],
+                                { 
+                                    name: 'cta_copy', 
+                                    buttonParamsJson: JSON.stringify({ 
+                                        display_text: 'Copy Session ID', 
+                                        copy_code: fullSession 
+                                    }) 
+                                },
+                                {
+                                    name: 'cta_url',
+                                    buttonParamsJson: JSON.stringify({
+                                        display_text: 'Join WaChannel',
+                                        url: 'https://whatsapp.com/channel/0029VbB6d0KKAwEdvcgqrH26'
+                                    })
+                                },
+                                {
+                                    name: 'cta_url',
+                                    buttonParamsJson: JSON.stringify({
+                                        display_text: 'Visit Repo',
+                                        url: 'https://github.com/kenyanpopkid/POPKID-XTR'
+                                    })
+                                }
+                            ]
                         });
 
-                    } catch (e) {
-                        await sock.sendMessage(sock.user.id, { text: `❌ Error: ${e.message}` });
-                    }
+                        // 3. Optional: Send the descriptive message with External Ad Reply
+                        let desc = `╭━━━━━━━━━━━━━━━━━━━━━╮\n┃  🚀 POPKID XTR USER ✅  ┃\n╰━━━━━━━━━━━━━━━━━━━━━╯\n\n👋🏻 Hello there, User!\n\n> ⚠️ *Do not share your session ID!* 🤖\n\n✅ **Thanks for using POPKID-XTR**\n\n© POPKID DEVS 🔰`;
+                        
+                        await sock.sendMessage(sock.user.id, {
+                            text: desc,
+                            contextInfo: {
+                                externalAdReply: {
+                                    title: "POPKID-XTR",
+                                    body: "Session Successfully Linked",
+                                    thumbnailUrl: "https://i.ibb.co/6cBHT8tC/popkid.jpg",
+                                    sourceUrl: "https://whatsapp.com/channel/0029VbB6d0KKAwEdvcgqrH26",
+                                    mediaType: 1,
+                                    renderLargerThumbnail: true
+                                }  
+                            }
+                        });
 
-                    await delay(2000); // Wait for button to deliver before closing
-                    await sock.ws.close();
-                    await removeFile('./temp/' + id);
-                    console.log(`👤 ${sock.user.id} 𝗖𝗼𝗻𝗻𝗲𝗰𝘁𝗲𝗱 ✅`);
-                    process.exit();
-                } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
-                    await delay(10);
+                    } catch (err) {
+                        console.error("Error during session processing:", err);
+                    } finally {
+                        // Cleanup
+                        await delay(5000);
+                        await sock.ws.close();
+                        removeFile(path.join(__dirname, 'temp', id));
+                        console.log(`👤 ${sock.user.id} Connected ✅`);
+                    }
+                    
+                } else if (connection === "close" && lastDisconnect?.error?.output?.statusCode !== 401) {
+                    await delay(5000);
                     GIFTED_MD_PAIR_CODE();
                 }
             });
+
         } catch (err) {
-            console.log("service restated");
-            await removeFile('./temp/' + id);
+            console.error("Main Error:", err);
+            removeFile(path.join(__dirname, 'temp', id));
             if (!res.headersSent) {
-                await res.send({ code: "❗ Service Unavailable" });
+                res.status(500).json({ code: "Service Unavailable" });
             }
         }
     }
-   return await GIFTED_MD_PAIR_CODE();
+
+    await GIFTED_MD_PAIR_CODE();
 });
 
 module.exports = router;
