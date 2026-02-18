@@ -4,7 +4,6 @@ const QRCode = require('qrcode');
 const fs = require('fs');
 let router = express.Router();
 const pino = require("pino");
-const { sendButtons } = require('gifted-btns'); // Library import
 const {
     default: makeWASocket,
     useMultiFileAuthState,
@@ -14,28 +13,35 @@ const {
     jidNormalizedUser
 } = require("@whiskeysockets/baileys");
 const { upload } = require('./mega');
-
 function removeFile(FilePath) {
     if (!fs.existsSync(FilePath)) return false;
     fs.rmSync(FilePath, { recursive: true, force: true });
 }
-
 router.get('/', async (req, res) => {
     const id = makeid();
+ //   let num = req.query.number;
     async function GIFTED_MD_PAIR_CODE() {
         const {
             state,
             saveCreds
         } = await useMultiFileAuthState('./temp/' + id);
         try {
+var items = ["Safari"];
+function selectRandomItem(array) {
+  var randomIndex = Math.floor(Math.random() * array.length);
+  return array[randomIndex];
+}
+var randomItem = selectRandomItem(items);
+            
             let sock = makeWASocket({
-                auth: state,
-                printQRInTerminal: false,
-                logger: pino({
-                    level: "silent"
-                }),
-                browser: Browsers.macOS("Desktop"),
-            });
+                	
+				auth: state,
+				printQRInTerminal: false,
+				logger: pino({
+					level: "silent"
+				}),
+				browser: Browsers.macOS("Desktop"),
+			});
             
             sock.ev.on('creds.update', saveCreds);
             sock.ev.on("connection.update", async (s) => {
@@ -44,53 +50,81 @@ router.get('/', async (req, res) => {
                     lastDisconnect,
                     qr
                 } = s;
-
-                if (qr) await res.end(await QRCode.toBuffer(qr));
-                
+              if (qr) await res.end(await QRCode.toBuffer(qr));
                 if (connection == "open") {
                     await delay(5000);
+                    let data = fs.readFileSync(__dirname + `/temp/${id}/creds.json`);
                     let rf = __dirname + `/temp/${id}/creds.json`;
-
+                    function generateRandomText() {
+                        const prefix = "3EB";
+                        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                        let randomText = prefix;
+                        for (let i = prefix.length; i < 22; i++) {
+                            const randomIndex = Math.floor(Math.random() * characters.length);
+                            randomText += characters.charAt(randomIndex);
+                        }
+                        return randomText;
+                    }
+                    const randomText = generateRandomText();
                     try {
                         const { upload } = require('./mega');
                         const mega_url = await upload(fs.createReadStream(rf), `${sock.user.id}.json`);
                         const string_session = mega_url.replace('https://mega.nz/file/', '');
                         let md = "POPKID;;;" + string_session;
+                        let code = await sock.sendMessage(sock.user.id, { text: md });
+                        let desc = `╔════════════════════╗
+   POPKID-XTR ✅
+   CONNECTED 🚀
+╚════════════════════╝
 
-                        const fancyCaption = `
-✨ *𝐏𝐎𝐏𝐊𝐈𝐃-𝐗𝐓𝐑 𝐒𝐄𝐒𝐒𝐈𝐎𝐍* ✨
+🔐 Session secured
+⚠️ Keep your ID private
 
-🙋 Hello there, POPKID-XTR User!
-Your QR connection was successful.
-
-🚀 *𝐒𝐞𝐬𝐬𝐢𝐨𝐧 𝐈𝐃:*
-\`\`\`${md}\`\`\`
-
-✅ **Thanks for choosing POPKID-XTR**
-`.trim();
-
-                        // Button Installation
-                        await sendButtons(sock, sock.user.id, {
-                            title: `ᴘᴏᴘᴋɪᴅ xᴛʀ ᴄᴏɴɴᴇᴄᴛ`,
-                            text: fancyCaption,
-                            footer: 'ᴘᴏᴘᴋɪᴅ ᴀɪ ᴋᴇɴʏᴀ 🇰🇪',
-                            image: "https://files.catbox.moe/aapw1p.png",
-                            buttons: [
-                                { id: md, text: "📋 𝐂𝐨𝐩𝐲 𝐒𝐞𝐬𝐬𝐢𝐨𝐧 𝐈𝐃" }
-                            ],
-                        });
-
-                    } catch (e) {
-                        let ddd = await sock.sendMessage(sock.user.id, { text: e.message });
+© *POPKID DEVS 🎥* `;
                         await sock.sendMessage(sock.user.id, {
-                            text: `❌ Session Upload Failed.`,
-                        }, { quoted: ddd });
+text: desc,
+contextInfo: {
+externalAdReply: {
+title: " 𝖇𝖔𝖙 𝖈𝖔𝖓𝖓𝖊𝖈𝖙𝖊𝖉",
+thumbnailUrl: "https://files.catbox.moe/aapw1p.png",
+sourceUrl: "https://whatsapp.com/channel/0029Vb70ySJHbFV91PNKuL3T",
+mediaType: 1,
+renderLargerThumbnail: true
+}  
+}
+},
+{quoted:code })
+                    } catch (e) {
+                            let ddd = sock.sendMessage(sock.user.id, { text: e });
+                            let desc = `╔════════════════════╗
+   POPKID-XTR ✅
+   CONNECTED 🚀
+╚════════════════════╝
+
+🔐 Session secured
+⚠️ Keep your ID private
+
+© POPKID DEVS 🔰`;
+                            await sock.sendMessage(sock.user.id, {
+text: desc,
+contextInfo: {
+externalAdReply: {
+title: " 𝖒𝖉 𝖈𝖔𝖓𝖓𝖊𝖈𝖙𝖊𝖉 ✅  ",
+thumbnailUrl: "https://files.catbox.moe/aapw1p.png",
+sourceUrl: "https://whatsapp.com/channel/0029Vb70ySJHbFV91PNKuL3T",
+mediaType: 2,
+renderLargerThumbnail: true,
+showAdAttribution: true
+}  
+}
+},
+{quoted:ddd })
                     }
-                    
-                    await delay(2000);
+                    await delay(10);
                     await sock.ws.close();
                     await removeFile('./temp/' + id);
-                    console.log(`👤 ${sock.user.id} 𝗖𝗼𝗻𝗻𝗲𝗰𝘁𝗲𝗱 ✅`);
+                    console.log(`👤 ${sock.user.id} 𝗖𝗼𝗻𝗻𝗲𝗰𝘁𝗲𝗱 ✅ 𝗥𝗲𝘀𝘁𝗮𝗿𝘁𝗶𝗻𝗴 𝗽𝗿𝗼𝗰𝗲𝘀𝘀...`);
+                    await delay(10);
                     process.exit();
                 } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
                     await delay(10);
@@ -98,7 +132,7 @@ Your QR connection was successful.
                 }
             });
         } catch (err) {
-            console.log("service restarted");
+            console.log("service restated");
             await removeFile('./temp/' + id);
             if (!res.headersSent) {
                 await res.send({ code: "❗ Service Unavailable" });
@@ -107,10 +141,9 @@ Your QR connection was successful.
     }
     await GIFTED_MD_PAIR_CODE();
 });
-
 setInterval(() => {
     console.log("☘️ 𝗥𝗲𝘀𝘁𝗮𝗿𝘁𝗶𝗻𝗴 𝗽𝗿𝗼𝗰𝗲𝘀𝘀...");
     process.exit();
-}, 180000); // 30min
-
+}, 180000); //30min
 module.exports = router;
+            
